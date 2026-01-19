@@ -15,6 +15,8 @@ namespace KindredTest.Repositories
     {
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
+        //_cachedResult and _semaphoreSlim are not static
+        //as the life scope of repo class is singleton
         private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
         private FeedResult? _cachedResult;
         public WageringFeedRepository(IConfiguration configuration, HttpClient httpClient) 
