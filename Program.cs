@@ -8,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 builder.Services.AddHttpClient();
+builder.Services.AddHostedService<WageringFeedBackgroundService>();
+builder.Services.AddSingleton<ICustomerRepository, CustomerRepository>();
 builder.Services.AddSingleton<IWageringFeedRepository, WageringFeedRepository>();
 builder.Services.AddSingleton<IWageringFeedService, WageringFeedService>();
 

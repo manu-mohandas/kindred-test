@@ -1,11 +1,10 @@
 
 If given more time, the following enhancements would be made:
 
-Persist aggregation state
+Automatic re-connection for WebSocket client
 Retry & timeout policies for HTTP calls (Polly)
 Structured logging & metrics
 Graceful shutdown handling
-Pagination / streaming support for very large feeds
 Unit tests for service logic
 Integration tests for WebSocket consumption
 

@@ -17,7 +17,7 @@ namespace KindredTest.Controllers
         [HttpGet("{customer_id}/stats")]
         public async Task<IActionResult> GetStats(int customer_id, CancellationToken cancellationToken)
         {
-            var customerStatsDto = await _wageringFeedService.ProcessAllBetsAsync(customer_id, cancellationToken);
+            var customerStatsDto = await _wageringFeedService.GetCustomerStatsAsync(customer_id, cancellationToken);
             return Ok(customerStatsDto);
         }
     }
