@@ -15,6 +15,8 @@ namespace KindredTest.Repositories
     {
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
+        private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
+        private FeedResult? _cachedResult;
         public WageringFeedRepository(IConfiguration configuration, HttpClient httpClient) 
         {
             _configuration = configuration;
@@ -28,7 +30,31 @@ namespace KindredTest.Repositories
         /// <returns></returns>
         public async Task<FeedResult> GetAllBetsAsync(CancellationToken cancellationToken)
         {
-         
+
+            if (_cachedResult != null)
+            {
+                return _cachedResult;
+            }
+
+            await _semaphoreSlim.WaitAsync(cancellationToken);
+            try
+            {
+                if(_cachedResult == null)
+                {
+                    _cachedResult = await GetAllBetsFromWebSocketAsync(cancellationToken);
+                }
+            }
+            finally
+            {
+                _semaphoreSlim.Release();
+            }
+
+            return _cachedResult;
+            
+        }
+
+        private async Task<FeedResult> GetAllBetsFromWebSocketAsync(CancellationToken cancellationToken)
+        {
             var result = new FeedResult();
             result.Bets = new List<BetPlaced>();
             using var websocket = new ClientWebSocket();
@@ -48,7 +74,7 @@ namespace KindredTest.Repositories
 
                 var json = Encoding.UTF8.GetString(buffer, 0, response.Count);
                 var message = JsonSerializer.Deserialize<BaseMessage>(json);
-                if (message != null) 
+                if (message != null)
                 {
                     if (message.Type == MessageType.BetPlaced)
                     {
@@ -61,7 +87,7 @@ namespace KindredTest.Repositories
                             result.Customers.Add(bet.CustomerId, customer);
                         }
                     }
-                    if(message.Type == MessageType.EndOfFeed)
+                    if (message.Type == MessageType.EndOfFeed)
                     {
                         break;
                     }
@@ -73,7 +99,6 @@ namespace KindredTest.Repositories
 
             return result;
         }
-
         private BetPlaced ParseBetPlaced(JsonElement payload)
         {
             return new BetPlaced
@@ -85,7 +110,7 @@ namespace KindredTest.Repositories
             };
         }
 
-        public async Task<Customer> GetCustomerAsync(int customerId)
+        private async Task<Customer> GetCustomerAsync(int customerId)
         {
             var url = $"{_configuration["customerBaseUrl"]}/customer?customerId={customerId}&candidateId={_configuration["candidateId"]}";
 
